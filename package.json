@@ -1,0 +1,27 @@
+{
+  "name": "@bizbash-media/newsletters",
+  "description": "Newsletters for Bizbash Media",
+  "repository": "https://github.com/parameter1/bizbash-media-newsletters.git",
+  "author": "Jessica Stenzel <jessica.stenzel@parameter1.com>",
+  "license": "MIT",
+  "private": true,
+  "root": true,
+  "workspaces": [
+    "packages/*",
+    "tenants/*"
+  ],
+  "scripts": {
+    "compile": "lerna run compile",
+    "lint": "lerna run lint",
+    "lint:css": "lerna run lint:css",
+    "lint:js": "lerna run lint:js",
+    "test": "lerna run test"
+  },
+  "devDependencies": {
+    "@parameter1/base-cms-marko-compiler": "^2.0.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.2",
+    "lerna": "^3.22.1"
+  }
+}
