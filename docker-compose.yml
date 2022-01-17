@@ -1,0 +1,60 @@
+version: '3.7'
+
+x-node-defaults: &node
+  tty: true
+  init: true
+  image: node:10.15
+  entrypoint: ["node"]
+  working_dir: /root
+  restart: always
+  volumes:
+    - ./:/root:cached
+    - ./node_modules:/root/node_modules:delegated
+    - yarn-cache:/.yarn-cache
+
+x-newsletter-command: &newsletter-cmd
+  entrypoint: ["node_modules/.bin/basecms-newsletters"]
+  command: ["dev", "index.js"]
+
+x-env-defaults: &env
+  YARN_CACHE_FOLDER: /.yarn-cache
+  NODE_ENV: development
+  NEW_RELIC_ENABLED: ${NEW_RELIC_ENABLED-0}
+  NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY-(unset)}
+  EMAILX_SERVE_URI: ${EMAILX_SERVE_URI-https://bizbash.serve.email-x.parameter1.com}
+
+x-env-tauron: &env-tauron
+  GRAPHQL_URI: ${GRAPHQL_URI-https://tauron.graphql.base.parameter1.com}
+
+services:
+  terminal:
+    <<: *node
+    working_dir: /root
+    entrypoint: ["/bin/bash"]
+    environment:
+      <<: *env
+
+  yarn:
+    <<: *node
+    working_dir: /root
+    entrypoint: ["yarn"]
+    environment:
+      <<: *env
+
+  all:
+    <<: *node
+    <<: *newsletter-cmd
+    working_dir: /root/tenants/all
+    environment:
+      <<: *env
+      <<: *env-tauron
+      PORT: 80
+      EXPOSED_PORT: 22290
+      LIVERELOAD_PORT: 32290
+      TENANT_KEY: bizbash_all
+    ports:
+      - "22290:80"
+      - "32290:32290"
+
+volumes:
+  yarn-cache: {}
