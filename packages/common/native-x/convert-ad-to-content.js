@@ -5,7 +5,7 @@ module.exports = ({ advertiser, campaign, creative }, { sectionName = 'Sponsored
   return {
     id: campaign.id,
     name: creative.title,
-    linkText: creative.title,
+    linkText: creative.linkText,
     shortName: creative.title,
     typeTitled: 'Promotion',
     type: 'promotion',
@@ -26,6 +26,7 @@ module.exports = ({ advertiser, campaign, creative }, { sectionName = 'Sponsored
       name: advertiser.name,
       website: advertiser.website,
       primaryImage: getAsObject(advertiser, 'image'),
+      externalId: advertiser.externalId,
     },
   };
 };
