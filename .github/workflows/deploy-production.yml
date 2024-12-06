@@ -1,0 +1,85 @@
+name: Deploy newsletters (production)
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+    - id: tag_version
+      run: |
+        REF=$(echo $GITHUB_REF | cut -d / -f 3)
+        [[ "$GITHUB_REF" =~ ^refs/tags.*$ ]] && VERSION="$REF" || VERSION="${REF}-${GITHUB_SHA::7}"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    outputs:
+      version: ${{ steps.tag_version.outputs.version }}
+
+  notify-start:
+    needs: [version]
+    uses: parameter1/actions/.github/workflows/notify-start.yml@main
+    secrets: inherit
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  post-deploy-failure:
+    if: failure()
+    needs: [notify-start, build-newsletters, deploy-newsletters]
+    uses: parameter1/actions/.github/workflows/notify-fail.yml@main
+    secrets: inherit
+    with:
+      slack-thread: ${{ needs.notify-start.outputs.slack-thread }}
+
+  post-deploy-complete:
+    if: success()
+    needs: [notify-start, build-newsletters, deploy-newsletters]
+    uses: parameter1/actions/.github/workflows/notify-complete.yml@main
+    secrets: inherit
+    with:
+      slack-thread: ${{ needs.notify-start.outputs.slack-thread }}
+
+  #########################
+  # Add newsletters here! #
+  #########################
+
+  build-newsletters:
+    needs: [version]
+    uses: parameter1/actions/.github/workflows/newsletter-build-push-test.yml@main
+    strategy:
+      matrix:
+        #####################################################
+        #v# Make sure this matches the newsletter matrix! #v#
+        #####################################################
+        newsletter:
+          - { stack: tauron, account: bizbash, tenant: bzb, rancher_label: bizbash-media-all }
+        #####################################################
+        #^# Make sure this matches the newsletter matrix! #^#
+        #####################################################
+    with:
+      ecr_registry: ${{ vars.AWS_ECR_REGISTRY }}
+      docker_image: ${{ vars.AWS_ECR_REGISTRY }}/mindful-web/newsletters:${{ matrix.newsletter.account }}-${{ matrix.newsletter.tenant }}-${{ needs.version.outputs.version }}
+      tenant: ${{ matrix.newsletter.tenant }}
+      push: true
+    secrets: inherit
+
+  deploy-newsletters:
+    needs: [version, build-newsletters]
+    uses: parameter1/actions/.github/workflows/newsletter-deploy-production.yml@main
+    strategy:
+      matrix:
+        #####################################################
+        #v# Make sure this matches the newsletter matrix! #v#
+        #####################################################
+        newsletter:
+          - { stack: tauron, account: bizbash, tenant: bzb, rancher_label: bizbash-media-all }
+        #####################################################
+        #^# Make sure this matches the newsletter matrix! #^#
+        #####################################################
+    with:
+      docker_image: ${{ vars.AWS_ECR_REGISTRY }}/mindful-web/newsletters:${{ matrix.newsletter.account }}-${{ matrix.newsletter.tenant }}-${{ needs.version.outputs.version }}
+      infra_stack: ${{ matrix.newsletter.stack }}
+      rancher_label_key: mindful-web-newsletter
+      rancher_label_val: ${{ matrix.newsletter.rancher_label }}
+    secrets: inherit
