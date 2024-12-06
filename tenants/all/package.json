@@ -5,6 +5,12 @@
   "repository": "https://github.com/parameter1/bizbash-media-newsletters/tree/master/tenants/all",
   "license": "MIT",
   "private": true,
+  "newsletter": {
+    "account": "bizbash",
+    "tenant": "bzb",
+    "stack": "tauron",
+    "deploy": true
+  },
   "scripts": {
     "dev": "basecms-newsletters dev index.js",
     "compile": "basecms-marko-compile compile --dir ./ --silent true",

@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "compile": "lerna run compile",
+    "generate-gha-workflows": "mindful-web-newsletter generate-gha-workflows",
     "lint": "lerna run lint",
     "lint:css": "lerna run lint:css",
     "lint:js": "lerna run lint:js",
